@@ -15,6 +15,7 @@ package tech.pegasys.teku.beaconrestapi.handlers.tekuv1.beacon;
 
 import static tech.pegasys.teku.infrastructure.http.ContentTypes.JSON;
 import static tech.pegasys.teku.infrastructure.http.ContentTypes.OCTET_STREAM;
+import static tech.pegasys.teku.infrastructure.http.HttpStatusCodes.SC_NOT_FOUND;
 import static tech.pegasys.teku.infrastructure.http.HttpStatusCodes.SC_OK;
 import static tech.pegasys.teku.infrastructure.http.RestApiConstants.RES_INTERNAL_ERROR;
 import static tech.pegasys.teku.infrastructure.http.RestApiConstants.RES_NOT_FOUND;
@@ -28,43 +29,47 @@ import io.javalin.plugin.openapi.annotations.HttpMethod;
 import io.javalin.plugin.openapi.annotations.OpenApi;
 import io.javalin.plugin.openapi.annotations.OpenApiContent;
 import io.javalin.plugin.openapi.annotations.OpenApiResponse;
+import java.util.Collections;
+import java.util.Optional;
 import java.util.function.Function;
-import tech.pegasys.teku.api.data.DepositTreeSnapshotData;
 import tech.pegasys.teku.api.response.v1.teku.GetDepositTreeSnapshotResponse;
-import tech.pegasys.teku.api.ssz.DepositTreeSnapshotSerializer;
 import tech.pegasys.teku.beaconrestapi.MigratingEndpointAdapter;
-import tech.pegasys.teku.infrastructure.json.types.CoreTypes;
+import tech.pegasys.teku.ethereum.pow.api.DepositTreeSnapshot;
 import tech.pegasys.teku.infrastructure.json.types.SerializableTypeDefinition;
-import tech.pegasys.teku.infrastructure.restapi.endpoints.AsyncApiResponse;
 import tech.pegasys.teku.infrastructure.restapi.endpoints.EndpointMetadata;
 import tech.pegasys.teku.infrastructure.restapi.endpoints.RestApiRequest;
+import tech.pegasys.teku.infrastructure.restapi.openapi.response.OctetStreamResponseContentTypeDefinition;
+import tech.pegasys.teku.infrastructure.ssz.SszData;
 import tech.pegasys.teku.validator.coordinator.Eth1DataProvider;
 
 public class GetDepositSnapshot extends MigratingEndpointAdapter {
 
   public static final String ROUTE = "/teku/v1/beacon/deposit_snapshot";
 
-  private static final SerializableTypeDefinition<DepositTreeSnapshotData> DEPOSIT_SNAPSHOT_TYPE =
-      SerializableTypeDefinition.object(DepositTreeSnapshotData.class)
-          .withField(
-              "finalized",
-              SerializableTypeDefinition.listOf(CoreTypes.BYTES32_TYPE)
-                  .withDescription("List of finalized nodes in deposit tree"),
-              DepositTreeSnapshotData::getFinalized)
-          .withField(
-              "deposits",
-              CoreTypes.UINT64_TYPE.withDescription("Number of deposits stored in the snapshot"),
-              DepositTreeSnapshotData::getDeposits)
-          .withField(
-              "execution_block_hash",
-              CoreTypes.BYTES32_TYPE.withDescription(
-                  "Hash of the execution block containing the highest index deposit stored in the snapshot"),
-              DepositTreeSnapshotData::getExecutionBlockHash)
-          .build();
+  private static final SerializableTypeDefinition<DepositTreeSnapshot> DEPOSIT_SNAPSHOT_TYPE =
+      DepositTreeSnapshot.getJsonTypeDefinition();
+  //      SerializableTypeDefinition.object(DepositTreeSnapshot.class)
+  //          .withField(
+  //              "finalized",
+  //              SerializableTypeDefinition.listOf(CoreTypes.BYTES32_TYPE)
+  //                  .withDescription("List of finalized nodes in deposit tree"),
+  //              DepositTreeSnapshot::getFinalized)
+  //          .withField(
+  //              "deposits",
+  //              CoreTypes.UINT64_TYPE.withDescription("Number of deposits stored in the
+  // snapshot"),
+  //              depositTreeSnapshot -> UInt64.valueOf(depositTreeSnapshot.getDeposits()))
+  //          .withField(
+  //              "execution_block_hash",
+  //              CoreTypes.BYTES32_TYPE.withDescription(
+  //                  "Hash of the execution block containing the highest index deposit stored in
+  // the snapshot"),
+  //              DepositTreeSnapshot::getExecutionBlockHash)
+  //          .build();
 
-  public static final SerializableTypeDefinition<DepositTreeSnapshotData>
+  public static final SerializableTypeDefinition<DepositTreeSnapshot>
       DEPOSIT_SNAPSHOT_RESPONSE_TYPE =
-          SerializableTypeDefinition.<DepositTreeSnapshotData>object()
+          SerializableTypeDefinition.<DepositTreeSnapshot>object()
               .name("GetDepositSnapshotResponse")
               .withField("data", DEPOSIT_SNAPSHOT_TYPE, Function.identity())
               .build();
@@ -84,7 +89,8 @@ public class GetDepositSnapshot extends MigratingEndpointAdapter {
                 SC_OK,
                 "Request successful",
                 DEPOSIT_SNAPSHOT_RESPONSE_TYPE,
-                DepositTreeSnapshotSerializer.OCTET_TYPE_DEFINITION)
+                new OctetStreamResponseContentTypeDefinition<>(
+                    SszData::sszSerialize, __ -> Collections.emptyMap()))
             .withNotFoundResponse()
             .build());
     this.eth1DataProvider = eth1DataProvider;
@@ -115,16 +121,12 @@ public class GetDepositSnapshot extends MigratingEndpointAdapter {
 
   @Override
   public void handleRequest(final RestApiRequest request) throws JsonProcessingException {
-    request.respondAsync(
-        eth1DataProvider
-            .getFinalizedDepositTreeSnapshot()
-            .thenApply(
-                maybeDepositTreeSnapshot -> {
-                  if (maybeDepositTreeSnapshot.isEmpty()) {
-                    return AsyncApiResponse.respondNotFound();
-                  } else {
-                    return AsyncApiResponse.respondOk(maybeDepositTreeSnapshot.get());
-                  }
-                }));
+    final Optional<DepositTreeSnapshot> snapshot =
+        eth1DataProvider.getFinalizedDepositTreeSnapshot();
+    if (snapshot.isEmpty()) {
+      request.respondError(SC_NOT_FOUND, "No finalized snapshot available");
+    } else {
+      request.respondOk(snapshot.get());
+    }
   }
 }
