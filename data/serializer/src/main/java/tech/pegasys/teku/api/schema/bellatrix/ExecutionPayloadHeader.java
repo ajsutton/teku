@@ -19,14 +19,17 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt256;
 import tech.pegasys.teku.infrastructure.bytes.Bytes20;
 import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 import tech.pegasys.teku.spec.Spec;
+import tech.pegasys.teku.spec.datastructures.execution.VerkleKeyValSchema;
 import tech.pegasys.teku.spec.schemas.SchemaDefinitionsBellatrix;
 
 public class ExecutionPayloadHeader extends ExecutionPayloadCommon {
@@ -50,6 +53,8 @@ public class ExecutionPayloadHeader extends ExecutionPayloadCommon {
       @JsonProperty("extra_data") Bytes extraData,
       @JsonProperty("base_fee_per_gas") UInt256 baseFeePerGas,
       @JsonProperty("block_hash") Bytes32 blockHash,
+      @JsonProperty("verkle_proof") Bytes verkleProof,
+      @JsonProperty("verkle_key_vals") List<VerkleKeyVal> verkleKeyVals,
       @JsonProperty("transactions_root") Bytes32 transactionsRoot) {
     super(
         parentHash,
@@ -64,7 +69,9 @@ public class ExecutionPayloadHeader extends ExecutionPayloadCommon {
         timestamp,
         extraData,
         baseFeePerGas,
-        blockHash);
+        blockHash,
+        verkleProof,
+        verkleKeyVals);
     this.transactionsRoot = transactionsRoot;
   }
 
@@ -84,7 +91,11 @@ public class ExecutionPayloadHeader extends ExecutionPayloadCommon {
         executionPayloadHeader.getTimestamp(),
         executionPayloadHeader.getExtraData(),
         executionPayloadHeader.getBaseFeePerGas(),
-        executionPayloadHeader.getBlockHash());
+        executionPayloadHeader.getBlockHash(),
+        executionPayloadHeader.getVerkleProof(),
+        executionPayloadHeader.getVerkleKeyVals().stream()
+            .map(VerkleKeyVal::fromInternalVerkleKeyVal)
+            .collect(Collectors.toList()));
     this.transactionsRoot = executionPayloadHeader.getTransactionsRoot();
   }
 
@@ -103,7 +114,11 @@ public class ExecutionPayloadHeader extends ExecutionPayloadCommon {
         executionPayload.getTimestamp(),
         executionPayload.getExtraData(),
         executionPayload.getBaseFeePerGas(),
-        executionPayload.getBlockHash());
+        executionPayload.getBlockHash(),
+        executionPayload.getVerkleProof(),
+        executionPayload.getVerkleKeyVals().stream()
+            .map(VerkleKeyVal::fromInternalVerkleKeyVal)
+            .collect(Collectors.toList()));
     this.transactionsRoot = executionPayload.getTransactions().hashTreeRoot();
   }
 
@@ -137,6 +152,17 @@ public class ExecutionPayloadHeader extends ExecutionPayloadCommon {
                     extraData,
                     baseFeePerGas,
                     blockHash,
+                    verkleProof,
+                    verkleKeyVals.stream()
+                        .map(
+                            val ->
+                                val.asInternalVerkleKeyVal(
+                                    (VerkleKeyValSchema)
+                                        schema
+                                            .getExecutionPayloadSchema()
+                                            .getVerkleKeyValsSchema()
+                                            .getElementSchema()))
+                        .collect(Collectors.toList()),
                     transactionsRoot));
   }
 

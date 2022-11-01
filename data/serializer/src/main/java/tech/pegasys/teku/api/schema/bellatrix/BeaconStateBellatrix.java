@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import tech.pegasys.teku.api.schema.BeaconBlockHeader;
@@ -31,6 +32,7 @@ import tech.pegasys.teku.infrastructure.ssz.collections.SszBitvector;
 import tech.pegasys.teku.infrastructure.ssz.primitive.SszByte;
 import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 import tech.pegasys.teku.spec.datastructures.execution.ExecutionPayloadHeaderSchema;
+import tech.pegasys.teku.spec.datastructures.execution.VerkleKeyValSchema;
 import tech.pegasys.teku.spec.datastructures.state.SyncCommittee.SyncCommitteeSchema;
 import tech.pegasys.teku.spec.datastructures.state.beaconstate.BeaconState;
 import tech.pegasys.teku.spec.datastructures.state.beaconstate.MutableBeaconState;
@@ -143,6 +145,16 @@ public class BeaconStateBellatrix extends BeaconStateAltair {
                       latestExecutionPayloadHeader.extraData,
                       latestExecutionPayloadHeader.baseFeePerGas,
                       latestExecutionPayloadHeader.blockHash,
+                      latestExecutionPayloadHeader.verkleProof,
+                      latestExecutionPayloadHeader.verkleKeyVals.stream()
+                          .map(
+                              val ->
+                                  val.asInternalVerkleKeyVal(
+                                      (VerkleKeyValSchema)
+                                          executionPayloadHeaderSchema
+                                              .getVerkleKeyValsSchema()
+                                              .getElementSchema()))
+                          .collect(Collectors.toList()),
                       latestExecutionPayloadHeader.transactionsRoot));
             });
   }

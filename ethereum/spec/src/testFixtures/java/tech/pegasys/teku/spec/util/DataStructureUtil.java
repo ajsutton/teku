@@ -23,6 +23,7 @@ import static tech.pegasys.teku.spec.schemas.ApiSchemas.VALIDATOR_REGISTRATION_S
 
 import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -470,6 +471,8 @@ public final class DataStructureUtil {
             randomBytes(randomInt(specConfigBellatrix.getMaxExtraDataBytes())),
             randomUInt256(),
             randomBytes32(),
+            Bytes.EMPTY,
+            Collections.emptyList(),
             randomBytes32());
   }
 
@@ -514,6 +517,8 @@ public final class DataStructureUtil {
             randomBytes(randomInt(specConfigBellatrix.getMaxExtraDataBytes())),
             randomUInt256(),
             randomBytes32(),
+            Bytes.EMPTY,
+            Collections.emptyList(),
             randomExecutionPayloadTransactions());
   }
 
@@ -538,6 +543,8 @@ public final class DataStructureUtil {
             Bytes.EMPTY,
             UInt256.ZERO,
             Bytes32.ZERO,
+            Bytes.EMPTY,
+            Collections.emptyList(),
             List.of());
   }
 

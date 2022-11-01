@@ -18,6 +18,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes32;
 import tech.pegasys.teku.api.schema.Attestation;
 import tech.pegasys.teku.api.schema.AttesterSlashing;
@@ -33,6 +34,7 @@ import tech.pegasys.teku.spec.SpecVersion;
 import tech.pegasys.teku.spec.datastructures.blocks.blockbody.BeaconBlockBody;
 import tech.pegasys.teku.spec.datastructures.blocks.blockbody.versions.bellatrix.BeaconBlockBodySchemaBellatrix;
 import tech.pegasys.teku.spec.datastructures.execution.ExecutionPayloadSchema;
+import tech.pegasys.teku.spec.datastructures.execution.VerkleKeyValSchema;
 
 public class BeaconBlockBodyBellatrix extends BeaconBlockBodyAltair {
   @JsonProperty("execution_payload")
@@ -105,6 +107,16 @@ public class BeaconBlockBodyBellatrix extends BeaconBlockBodyAltair {
                             executionPayload.extraData,
                             executionPayload.baseFeePerGas,
                             executionPayload.blockHash,
+                            executionPayload.verkleProof,
+                            executionPayload.verkleKeyVals.stream()
+                                .map(
+                                    val ->
+                                        val.asInternalVerkleKeyVal(
+                                            (VerkleKeyValSchema)
+                                                executionPayloadSchema
+                                                    .getVerkleKeyValsSchema()
+                                                    .getElementSchema()))
+                                .collect(Collectors.toList()),
                             executionPayload.transactions))));
   }
 }

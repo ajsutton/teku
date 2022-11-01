@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.MoreObjects;
+import java.util.List;
 import java.util.Objects;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
@@ -88,6 +89,12 @@ public class ExecutionPayloadCommon {
   @JsonDeserialize(using = Bytes32Deserializer.class)
   public final Bytes32 blockHash;
 
+  @JsonSerialize(using = BytesSerializer.class)
+  @JsonDeserialize(using = BytesDeserializer.class)
+  public final Bytes verkleProof;
+
+  public final List<VerkleKeyValV1> verkleKeyVals;
+
   public ExecutionPayloadCommon(
       @JsonProperty("parentHash") Bytes32 parentHash,
       @JsonProperty("feeRecipient") Bytes20 feeRecipient,
@@ -101,7 +108,9 @@ public class ExecutionPayloadCommon {
       @JsonProperty("timestamp") UInt64 timestamp,
       @JsonProperty("extraData") Bytes extraData,
       @JsonProperty("baseFeePerGas") UInt256 baseFeePerGas,
-      @JsonProperty("blockHash") Bytes32 blockHash) {
+      @JsonProperty("blockHash") Bytes32 blockHash,
+      @JsonProperty("verkleProof") Bytes verkleProof,
+      @JsonProperty("verkleKeyVals") List<VerkleKeyValV1> verkleKeyVals) {
     checkNotNull(parentHash, "parentHash");
     checkNotNull(feeRecipient, "feeRecipient");
     checkNotNull(stateRoot, "stateRoot");
@@ -115,6 +124,8 @@ public class ExecutionPayloadCommon {
     checkNotNull(extraData, "extraData");
     checkNotNull(baseFeePerGas, "baseFeePerGas");
     checkNotNull(blockHash, "blockHash");
+    checkNotNull(verkleProof, "verkleProof");
+    checkNotNull(verkleKeyVals, "verkleKeyVals");
     this.parentHash = parentHash;
     this.feeRecipient = feeRecipient;
     this.stateRoot = stateRoot;
@@ -128,6 +139,8 @@ public class ExecutionPayloadCommon {
     this.extraData = extraData;
     this.baseFeePerGas = baseFeePerGas;
     this.blockHash = blockHash;
+    this.verkleProof = verkleProof;
+    this.verkleKeyVals = verkleKeyVals;
   }
 
   @Override
@@ -151,7 +164,9 @@ public class ExecutionPayloadCommon {
         && Objects.equals(timestamp, that.timestamp)
         && Objects.equals(extraData, that.extraData)
         && Objects.equals(baseFeePerGas, that.baseFeePerGas)
-        && Objects.equals(blockHash, that.blockHash);
+        && Objects.equals(blockHash, that.blockHash)
+        && Objects.equals(verkleProof, that.verkleProof)
+        && Objects.equals(verkleKeyVals, that.verkleKeyVals);
   }
 
   @Override
@@ -169,7 +184,9 @@ public class ExecutionPayloadCommon {
         timestamp,
         extraData,
         baseFeePerGas,
-        blockHash);
+        blockHash,
+        verkleProof,
+        verkleKeyVals);
   }
 
   @Override
@@ -188,6 +205,8 @@ public class ExecutionPayloadCommon {
         .add("extraData", extraData)
         .add("baseFeePerGas", baseFeePerGas)
         .add("blockHash", blockHash)
+        .add("verkleProof", verkleProof)
+        .add("verkleKeyVals", verkleKeyVals)
         .toString();
   }
 }

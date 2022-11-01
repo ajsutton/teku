@@ -17,6 +17,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static org.assertj.core.api.Assertions.assertThat;
 import static tech.pegasys.teku.infrastructure.time.TimeUtilities.secondsToMillis;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
@@ -120,6 +121,8 @@ public class ChainUpdater {
                     Bytes32.ZERO,
                     UInt256.ONE,
                     Bytes32.random(),
+                    Bytes.EMPTY,
+                    Collections.emptyList(),
                     Bytes32.ZERO)));
   }
 

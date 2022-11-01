@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 import static tech.pegasys.teku.spec.schemas.ApiSchemas.SIGNED_VALIDATOR_REGISTRATION_SCHEMA;
 import static tech.pegasys.teku.spec.schemas.ApiSchemas.VALIDATOR_REGISTRATION_SCHEMA;
 
+import java.util.Collections;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt256;
@@ -248,6 +249,8 @@ public class BuilderBidValidatorTest {
             Bytes32.ZERO,
             UInt256.ONE,
             Bytes32.random(),
+            Bytes.EMPTY,
+            Collections.emptyList(),
             Bytes32.ZERO);
   }
 }

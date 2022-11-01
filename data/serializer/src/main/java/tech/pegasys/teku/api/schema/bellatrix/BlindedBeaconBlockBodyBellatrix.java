@@ -18,6 +18,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes32;
 import tech.pegasys.teku.api.schema.Attestation;
 import tech.pegasys.teku.api.schema.AttesterSlashing;
@@ -34,6 +35,7 @@ import tech.pegasys.teku.spec.datastructures.blocks.blockbody.BeaconBlockBody;
 import tech.pegasys.teku.spec.datastructures.blocks.blockbody.versions.bellatrix.BeaconBlockBodyBellatrix;
 import tech.pegasys.teku.spec.datastructures.blocks.blockbody.versions.bellatrix.BlindedBeaconBlockBodySchemaBellatrix;
 import tech.pegasys.teku.spec.datastructures.execution.ExecutionPayloadHeaderSchema;
+import tech.pegasys.teku.spec.datastructures.execution.VerkleKeyValSchema;
 
 public class BlindedBeaconBlockBodyBellatrix extends BeaconBlockBodyAltair {
   @JsonProperty("execution_payload_header")
@@ -117,6 +119,16 @@ public class BlindedBeaconBlockBodyBellatrix extends BeaconBlockBodyAltair {
                             executionPayloadHeader.extraData,
                             executionPayloadHeader.baseFeePerGas,
                             executionPayloadHeader.blockHash,
+                            executionPayloadHeader.verkleProof,
+                            executionPayloadHeader.verkleKeyVals.stream()
+                                .map(
+                                    val ->
+                                        val.asInternalVerkleKeyVal(
+                                            (VerkleKeyValSchema)
+                                                executionPayloadHeaderSchema
+                                                    .getVerkleKeyValsSchema()
+                                                    .getElementSchema()))
+                                .collect(Collectors.toList()),
                             executionPayloadHeader.transactionsRoot))));
   }
 }

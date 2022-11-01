@@ -30,6 +30,7 @@ import tech.pegasys.teku.infrastructure.bytes.Bytes20;
 import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 import tech.pegasys.teku.spec.Spec;
 import tech.pegasys.teku.spec.datastructures.execution.Transaction;
+import tech.pegasys.teku.spec.datastructures.execution.VerkleKeyValSchema;
 import tech.pegasys.teku.spec.schemas.SchemaDefinitionsBellatrix;
 
 public class ExecutionPayload extends ExecutionPayloadCommon {
@@ -52,6 +53,8 @@ public class ExecutionPayload extends ExecutionPayloadCommon {
       @JsonProperty("extra_data") Bytes extraData,
       @JsonProperty("base_fee_per_gas") UInt256 baseFeePerGas,
       @JsonProperty("block_hash") Bytes32 blockHash,
+      @JsonProperty("verkle_proof") Bytes verkleProof,
+      @JsonProperty("verkle_key_vals") List<VerkleKeyVal> verkleKeyVals,
       @JsonProperty("transactions") List<Bytes> transactions) {
     super(
         parentHash,
@@ -66,7 +69,9 @@ public class ExecutionPayload extends ExecutionPayloadCommon {
         timestamp,
         extraData,
         baseFeePerGas,
-        blockHash);
+        blockHash,
+        verkleProof,
+        verkleKeyVals);
     this.transactions = transactions != null ? transactions : Collections.emptyList();
   }
 
@@ -85,7 +90,11 @@ public class ExecutionPayload extends ExecutionPayloadCommon {
         executionPayload.getTimestamp(),
         executionPayload.getExtraData(),
         executionPayload.getBaseFeePerGas(),
-        executionPayload.getBlockHash());
+        executionPayload.getBlockHash(),
+        executionPayload.getVerkleProof(),
+        executionPayload.getVerkleKeyVals().stream()
+            .map(VerkleKeyVal::fromInternalVerkleKeyVal)
+            .collect(Collectors.toList()));
     this.transactions =
         executionPayload.getTransactions().stream()
             .map(Transaction::getBytes)
@@ -122,6 +131,17 @@ public class ExecutionPayload extends ExecutionPayloadCommon {
                     extraData,
                     baseFeePerGas,
                     blockHash,
+                    verkleProof,
+                    verkleKeyVals.stream()
+                        .map(
+                            val ->
+                                val.asInternalVerkleKeyVal(
+                                    (VerkleKeyValSchema)
+                                        schema
+                                            .getExecutionPayloadSchema()
+                                            .getVerkleKeyValsSchema()
+                                            .getElementSchema()))
+                        .collect(Collectors.toList()),
                     transactions));
   }
 

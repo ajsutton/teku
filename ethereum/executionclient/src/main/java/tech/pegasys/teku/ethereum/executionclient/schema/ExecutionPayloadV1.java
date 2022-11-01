@@ -30,6 +30,7 @@ import tech.pegasys.teku.infrastructure.ssz.collections.impl.SszByteListImpl;
 import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 import tech.pegasys.teku.spec.datastructures.execution.ExecutionPayload;
 import tech.pegasys.teku.spec.datastructures.execution.ExecutionPayloadSchema;
+import tech.pegasys.teku.spec.datastructures.execution.VerkleKeyValSchema;
 
 public class ExecutionPayloadV1 extends ExecutionPayloadCommon {
   @JsonSerialize(contentUsing = BytesSerializer.class)
@@ -50,6 +51,8 @@ public class ExecutionPayloadV1 extends ExecutionPayloadCommon {
       @JsonProperty("extraData") Bytes extraData,
       @JsonProperty("baseFeePerGas") UInt256 baseFeePerGas,
       @JsonProperty("blockHash") Bytes32 blockHash,
+      @JsonProperty("verkleProof") Bytes verkleProof,
+      @JsonProperty("verkleKeyVals") List<VerkleKeyValV1> verkleKeyVals,
       @JsonProperty("transactions") List<Bytes> transactions) {
     super(
         parentHash,
@@ -64,7 +67,9 @@ public class ExecutionPayloadV1 extends ExecutionPayloadCommon {
         timestamp,
         extraData,
         baseFeePerGas,
-        blockHash);
+        blockHash,
+        verkleProof,
+        verkleKeyVals);
     this.transactions = transactions != null ? transactions : List.of();
   }
 
@@ -84,6 +89,14 @@ public class ExecutionPayloadV1 extends ExecutionPayloadCommon {
         extraData,
         baseFeePerGas,
         blockHash,
+        verkleProof,
+        verkleKeyVals.stream()
+            .map(
+                verkleKeyValV1 ->
+                    verkleKeyValV1.asInternalVerkleKeyVal(
+                        (VerkleKeyValSchema)
+                            executionPayloadSchema.getVerkleKeyValsSchema().getElementSchema()))
+            .collect(Collectors.toList()),
         transactions);
   }
 
@@ -102,6 +115,10 @@ public class ExecutionPayloadV1 extends ExecutionPayloadCommon {
         executionPayload.getExtraData(),
         executionPayload.getBaseFeePerGas(),
         executionPayload.getBlockHash(),
+        executionPayload.getVerkleProof(),
+        executionPayload.getVerkleKeyVals().stream()
+            .map(VerkleKeyValV1::fromInternalVerkleKeyVal)
+            .collect(Collectors.toList()),
         executionPayload.getTransactions().stream()
             .map(SszByteListImpl::getBytes)
             .collect(Collectors.toList()));

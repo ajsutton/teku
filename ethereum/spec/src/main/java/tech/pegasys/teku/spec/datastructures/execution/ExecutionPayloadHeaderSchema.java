@@ -27,17 +27,22 @@ import static tech.pegasys.teku.spec.datastructures.execution.ExecutionPayloadFi
 import static tech.pegasys.teku.spec.datastructures.execution.ExecutionPayloadFields.STATE_ROOT;
 import static tech.pegasys.teku.spec.datastructures.execution.ExecutionPayloadFields.TIMESTAMP;
 import static tech.pegasys.teku.spec.datastructures.execution.ExecutionPayloadFields.TRANSACTIONS_ROOT;
+import static tech.pegasys.teku.spec.datastructures.execution.ExecutionPayloadFields.VERKLE_KEY_VALS;
+import static tech.pegasys.teku.spec.datastructures.execution.ExecutionPayloadFields.VERKLE_PROOF;
 
+import java.util.List;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt256;
 import tech.pegasys.teku.infrastructure.bytes.Bytes20;
+import tech.pegasys.teku.infrastructure.ssz.SszList;
 import tech.pegasys.teku.infrastructure.ssz.collections.SszByteList;
 import tech.pegasys.teku.infrastructure.ssz.collections.SszByteVector;
-import tech.pegasys.teku.infrastructure.ssz.containers.ContainerSchema14;
+import tech.pegasys.teku.infrastructure.ssz.containers.ContainerSchema16;
 import tech.pegasys.teku.infrastructure.ssz.primitive.SszBytes32;
 import tech.pegasys.teku.infrastructure.ssz.primitive.SszUInt256;
 import tech.pegasys.teku.infrastructure.ssz.primitive.SszUInt64;
+import tech.pegasys.teku.infrastructure.ssz.schema.SszListSchema;
 import tech.pegasys.teku.infrastructure.ssz.schema.SszPrimitiveSchemas;
 import tech.pegasys.teku.infrastructure.ssz.schema.collections.SszByteListSchema;
 import tech.pegasys.teku.infrastructure.ssz.schema.collections.SszByteVectorSchema;
@@ -46,7 +51,7 @@ import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 import tech.pegasys.teku.spec.config.SpecConfigBellatrix;
 
 public class ExecutionPayloadHeaderSchema
-    extends ContainerSchema14<
+    extends ContainerSchema16<
         ExecutionPayloadHeader,
         SszBytes32,
         SszByteVector,
@@ -61,6 +66,8 @@ public class ExecutionPayloadHeaderSchema
         SszByteList,
         SszUInt256,
         SszBytes32,
+        SszByteList,
+        SszList<VerkleKeyVal>,
         SszBytes32> {
 
   private final ExecutionPayloadHeader defaultExecutionPayloadHeader;
@@ -82,6 +89,8 @@ public class ExecutionPayloadHeaderSchema
         namedSchema(EXTRA_DATA, SszByteListSchema.create(specConfig.getMaxExtraDataBytes())),
         namedSchema(BASE_FEE_PER_GAS, SszPrimitiveSchemas.UINT256_SCHEMA),
         namedSchema(BLOCK_HASH, SszPrimitiveSchemas.BYTES32_SCHEMA),
+        namedSchema(VERKLE_PROOF, SszByteListSchema.create(75_000)),
+        namedSchema(VERKLE_KEY_VALS, SszListSchema.create(new VerkleKeyValSchema(), 75_000)),
         namedSchema(TRANSACTIONS_ROOT, SszPrimitiveSchemas.BYTES32_SCHEMA));
 
     final ExecutionPayload defaultExecutionPayload =
@@ -116,6 +125,8 @@ public class ExecutionPayloadHeaderSchema
       Bytes extraData,
       UInt256 baseFeePerGas,
       Bytes32 blockHash,
+      Bytes verkleProof,
+      List<VerkleKeyVal> verkleKeyVals,
       Bytes32 transactionsRoot) {
     return new ExecutionPayloadHeader(
         this,
@@ -132,6 +143,8 @@ public class ExecutionPayloadHeaderSchema
         getExtraDataSchema().fromBytes(extraData),
         SszUInt256.of(baseFeePerGas),
         SszBytes32.of(blockHash),
+        getVerkleProofSchema().fromBytes(verkleProof),
+        getVerkleKeyValsSchema().createFromElements(verkleKeyVals),
         SszBytes32.of(transactionsRoot));
   }
 
@@ -152,6 +165,8 @@ public class ExecutionPayloadHeaderSchema
         getExtraDataSchema().fromBytes(executionPayload.getExtraData()),
         SszUInt256.of(executionPayload.getBaseFeePerGas()),
         SszBytes32.of(executionPayload.getBlockHash()),
+        getVerkleProofSchema().fromBytes(executionPayload.getVerkleProof()),
+        executionPayload.getVerkleKeyVals(),
         SszBytes32.of(executionPayload.getTransactions().hashTreeRoot()));
   }
 
@@ -166,5 +181,15 @@ public class ExecutionPayloadHeaderSchema
 
   public long getBlindedNodeGeneralizedIndex() {
     return getChildGeneralizedIndex(getFieldIndex(TRANSACTIONS_ROOT));
+  }
+
+  @SuppressWarnings("unchecked")
+  public SszByteListSchema<SszByteList> getVerkleProofSchema() {
+    return (SszByteListSchema<SszByteList>) getFieldSchema13();
+  }
+
+  @SuppressWarnings("unchecked")
+  public SszListSchema<VerkleKeyVal, SszList<VerkleKeyVal>> getVerkleKeyValsSchema() {
+    return (SszListSchema<VerkleKeyVal, SszList<VerkleKeyVal>>) getFieldSchema14();
   }
 }

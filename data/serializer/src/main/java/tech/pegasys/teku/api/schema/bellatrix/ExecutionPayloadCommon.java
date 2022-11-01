@@ -21,7 +21,9 @@ import static tech.pegasys.teku.api.schema.SchemaConstants.PATTERN_BYTES32;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt256;
@@ -105,6 +107,16 @@ public abstract class ExecutionPayloadCommon {
       description = DESCRIPTION_BYTES32)
   public final Bytes32 blockHash;
 
+  @JsonProperty("verkle_proof")
+  @Schema(
+      type = "string",
+      format = "byte",
+      pattern = PATTERN_BYTES32,
+      description = DESCRIPTION_BYTES32)
+  public final Bytes verkleProof;
+
+  public final List<VerkleKeyVal> verkleKeyVals;
+
   public ExecutionPayloadCommon(
       @JsonProperty("parent_hash") Bytes32 parentHash,
       @JsonProperty("fee_recipient") Bytes20 feeRecipient,
@@ -118,7 +130,9 @@ public abstract class ExecutionPayloadCommon {
       @JsonProperty("timestamp") UInt64 timestamp,
       @JsonProperty("extra_data") Bytes extraData,
       @JsonProperty("base_fee_per_gas") UInt256 baseFeePerGas,
-      @JsonProperty("block_hash") Bytes32 blockHash) {
+      @JsonProperty("block_hash") Bytes32 blockHash,
+      @JsonProperty("verkle_proof") Bytes verkleProof,
+      @JsonProperty("verkle_key_vals") List<VerkleKeyVal> verkleKeyVals) {
     this.parentHash = parentHash;
     this.feeRecipient = feeRecipient;
     this.stateRoot = stateRoot;
@@ -132,6 +146,8 @@ public abstract class ExecutionPayloadCommon {
     this.extraData = extraData;
     this.baseFeePerGas = baseFeePerGas;
     this.blockHash = blockHash;
+    this.verkleProof = verkleProof;
+    this.verkleKeyVals = verkleKeyVals;
   }
 
   public ExecutionPayloadCommon(
@@ -149,6 +165,11 @@ public abstract class ExecutionPayloadCommon {
     this.extraData = executionPayload.getExtraData();
     this.baseFeePerGas = executionPayload.getBaseFeePerGas();
     this.blockHash = executionPayload.getBlockHash();
+    this.verkleProof = executionPayload.getVerkleProof();
+    this.verkleKeyVals =
+        executionPayload.getVerkleKeyVals().stream()
+            .map(VerkleKeyVal::fromInternalVerkleKeyVal)
+            .collect(Collectors.toList());
   }
 
   @Override
@@ -172,7 +193,9 @@ public abstract class ExecutionPayloadCommon {
         && Objects.equals(timestamp, that.timestamp)
         && Objects.equals(extraData, that.extraData)
         && Objects.equals(baseFeePerGas, that.baseFeePerGas)
-        && Objects.equals(blockHash, that.blockHash);
+        && Objects.equals(blockHash, that.blockHash)
+        && Objects.equals(verkleProof, that.verkleProof)
+        && Objects.equals(verkleKeyVals, that.verkleKeyVals);
   }
 
   @Override
@@ -190,7 +213,9 @@ public abstract class ExecutionPayloadCommon {
         timestamp,
         extraData,
         baseFeePerGas,
-        blockHash);
+        blockHash,
+        verkleProof,
+        verkleKeyVals);
   }
 
   @Override
@@ -209,6 +234,8 @@ public abstract class ExecutionPayloadCommon {
         .add("extraData", extraData)
         .add("baseFeePerGas", baseFeePerGas)
         .add("blockHash", blockHash)
+        .add("verkleProof", verkleProof)
+        .add("verkleKeyVals", verkleKeyVals)
         .toString();
   }
 }

@@ -20,8 +20,8 @@ import tech.pegasys.teku.infrastructure.bytes.Bytes20;
 import tech.pegasys.teku.infrastructure.ssz.SszList;
 import tech.pegasys.teku.infrastructure.ssz.collections.SszByteList;
 import tech.pegasys.teku.infrastructure.ssz.collections.SszByteVector;
-import tech.pegasys.teku.infrastructure.ssz.containers.Container14;
-import tech.pegasys.teku.infrastructure.ssz.containers.ContainerSchema14;
+import tech.pegasys.teku.infrastructure.ssz.containers.Container16;
+import tech.pegasys.teku.infrastructure.ssz.containers.ContainerSchema16;
 import tech.pegasys.teku.infrastructure.ssz.primitive.SszBytes32;
 import tech.pegasys.teku.infrastructure.ssz.primitive.SszUInt256;
 import tech.pegasys.teku.infrastructure.ssz.primitive.SszUInt64;
@@ -29,7 +29,7 @@ import tech.pegasys.teku.infrastructure.ssz.tree.TreeNode;
 import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 
 public class ExecutionPayload
-    extends Container14<
+    extends Container16<
         ExecutionPayload,
         SszBytes32,
         SszByteVector,
@@ -44,11 +44,13 @@ public class ExecutionPayload
         SszByteList,
         SszUInt256,
         SszBytes32,
+        SszByteList,
+        SszList<VerkleKeyVal>,
         SszList<Transaction>>
     implements ExecutionPayloadSummary {
 
   ExecutionPayload(
-      ContainerSchema14<
+      ContainerSchema16<
               ExecutionPayload,
               SszBytes32,
               SszByteVector,
@@ -63,6 +65,8 @@ public class ExecutionPayload
               SszByteList,
               SszUInt256,
               SszBytes32,
+              SszByteList,
+              SszList<VerkleKeyVal>,
               SszList<Transaction>>
           type,
       TreeNode backingNode) {
@@ -84,6 +88,8 @@ public class ExecutionPayload
       SszByteList extraData,
       SszUInt256 baseFeePerGas,
       SszBytes32 blockHash,
+      SszByteList verkleProof,
+      SszList<VerkleKeyVal> verkleKeyVals,
       SszList<Transaction> transactions) {
     super(
         schema,
@@ -100,6 +106,8 @@ public class ExecutionPayload
         extraData,
         baseFeePerGas,
         blockHash,
+        verkleProof,
+        verkleKeyVals,
         transactions);
   }
 
@@ -183,8 +191,16 @@ public class ExecutionPayload
     return hashTreeRoot();
   }
 
+  public Bytes getVerkleProof() {
+    return getField13().getBytes();
+  }
+
+  public SszList<VerkleKeyVal> getVerkleKeyVals() {
+    return getField14();
+  }
+
   public SszList<Transaction> getTransactions() {
-    return getField13();
+    return getField15();
   }
 
   public TreeNode getUnblindedNode() {

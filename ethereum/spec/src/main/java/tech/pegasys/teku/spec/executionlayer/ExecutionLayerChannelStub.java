@@ -16,6 +16,7 @@ package tech.pegasys.teku.spec.executionlayer;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -225,6 +226,8 @@ public class ExecutionLayerChannelStub implements ExecutionLayerChannel {
                 Bytes.EMPTY,
                 UInt256.ONE,
                 Bytes32.random(),
+                Bytes.EMPTY,
+                Collections.emptyList(),
                 List.of(Bytes.fromHexString("0x0edf"), Bytes.fromHexString("0xedf0")));
 
     // we assume all blocks are produced locally

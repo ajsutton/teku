@@ -222,6 +222,8 @@ public class BlockProposalTestUtil {
         dataStructureUtil.randomBytes32(),
         UInt256.ONE,
         dataStructureUtil.randomBytes32(),
+        Bytes.EMPTY,
+        Collections.emptyList(),
         transactions.orElse(Collections.emptyList()));
   }
 

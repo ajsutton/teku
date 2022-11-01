@@ -30,6 +30,8 @@ public enum ExecutionPayloadFields implements SszFieldName {
   EXTRA_DATA,
   BASE_FEE_PER_GAS,
   BLOCK_HASH,
+  VERKLE_PROOF,
+  VERKLE_KEY_VALS,
   TRANSACTIONS,
   TRANSACTIONS_ROOT;
 
