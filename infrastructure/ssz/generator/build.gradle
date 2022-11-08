@@ -1,6 +1,8 @@
 dependencies {
   implementation project(':infrastructure:bytes')
   implementation project(':infrastructure:ssz')
+  implementation 'org.javassist:javassist'
+  implementation 'org.apache.commons:commons-text'
 }
 
 task generateContainers(type: JavaExec) {
